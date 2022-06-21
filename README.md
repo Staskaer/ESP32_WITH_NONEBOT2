@@ -22,6 +22,17 @@
 
 ---
 
+> #### 使用说明：
+> + 先根据 _单片机程序说明_  部分对[esp32.ino](esp32_arduino/esp32.ino)这个文件修改参数，然后使用`Arduino`烧录进自己的`ESP32系列`单片机中。
+> 
+> + 可以先参考`nonebot2`的[文档](https://v2.nonebot.dev/docs/)或[视频](https://www.bilibili.com/video/BV1aZ4y1f7e2?vd_source=0d656b14ae90f1922a53cbbeeb23cc68)来自行部署`nonebot2`。
+> 
+> + (后面我也会尝试出一个针对这个项目从头开始部署的视频)
+> 
+> + 部署好`nonebot2`后，将[esp.py](nonebot2_plugin/esp.py)拖入到`/{你的bot名字}/plugins/`中即可。
+
+---
+
 > #### 单片机程序说明
 > 
 > 可以选用任何型号的esp32，但是由于我手上只有esp32c3安信可模组，所以引脚在此款模组下能正常工作，其他型号需要更改LED指示灯的对应引脚（具体查阅原理图或自行焊接），否则可能不会出现以下描述的现象（主要是LED指示灯）。
