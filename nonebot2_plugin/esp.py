@@ -1,5 +1,5 @@
 import contextlib
-from itsdangerous import exc
+from re import sub
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot.params import T_State, State
 from nonebot.plugin import on_regex, on_message, on_command
@@ -33,6 +33,7 @@ class ESP(object):
         # 对名称进行重命名
         try:
             self._url_dict[new_name] = self._url_dict.pop(raw_name)
+            self._write()
             return Message(f'"{raw_name}"已经更改成了"{new_name}"捏')
         except Exception:
             return Message("更改失败，请检测输入是否正确")
@@ -167,5 +168,5 @@ async def _esp(bot: Bot,
                event: Event,
                state: T_State = State(),
                permission=SUPERUSER):
-    cmd_list = str(event.get_message()).split(" ")
+    cmd_list = sub(" +", " ", str(event.get_message())).split(" ")
     await esp_code.finish(message=ESP_CONTROL.callback(cmd_list))
