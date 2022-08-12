@@ -1,4 +1,5 @@
-from itsdangerous import exc
+import contextlib
+from re import sub
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot.params import T_State, State
 from nonebot.plugin import on_regex, on_message, on_command
@@ -25,31 +26,30 @@ class ESP(object):
         self._golbal_dict["off"] = "off"
         self._golbal_dict["conf"] = "conf"
         self._golbal_dict["timeout"] = "3"
-        try:
+        with contextlib.suppress(Exception):
             self._read()
-        except:
-            pass
 
     def rename(self, raw_name, new_name) -> Message:
         # 对名称进行重命名
         try:
             self._url_dict[new_name] = self._url_dict.pop(raw_name)
-            return Message("\"{}\"已经更改成了\"{}\"捏".format(raw_name, new_name))
-        except:
+            self._write()
+            return Message(f'"{raw_name}"已经更改成了"{new_name}"捏')
+        except Exception:
             return Message("更改失败，请检测输入是否正确")
 
     def ls(self) -> Message:
         # 返回所有信息
         result = "内容如下：\n"
         for i in self._url_dict:
-            result += "开关\"{}\"对应的地址为{} ".format(i, self._url_dict[i])
+            result += f'开关"{i}"对应的地址为{self._url_dict[i]} '
         return Message(result)
 
     def reurl(self, name, new_url) -> Message:
         # 更新地址信息
         if name in self._url_dict.keys():
             if not new_url.startswith("http://"):
-                new_url = "http://"+new_url
+                new_url = f"http://{new_url}"
             self._url_dict[name] = new_url
             self._write()
             return Message("更新完成了捏")
@@ -57,22 +57,20 @@ class ESP(object):
             return Message("更新失败，请检查当前开关是否已被录入")
 
     def add_(self, name, url) -> Message:
-        # 增加地址
         if name in self._url_dict.keys():
             return Message("添加失败，当前开关已经存在")
-        else:
-            if not url.startswith("http://"):
-                url = "http://"+url
-            self._url_dict[name] = url
-            self._write()
-            return Message("更新完成了捏")
+        if not url.startswith("http://"):
+            url = f"http://{url}"
+        self._url_dict[name] = url
+        self._write()
+        return Message("更新完成了捏")
 
     def del_(self, name) -> Message:
         # 删除某个开关
         if name in self._url_dict.keys():
             self._url_dict.pop(name)
             self._write()
-            return Message("\"{}\"已经删除了捏".format(name))
+            return Message(f'"{name}"已经删除了捏')
         else:
             return Message("当前开关不存在，请检查输入是否正确")
 
@@ -95,49 +93,40 @@ class ESP(object):
         if key in self._golbal_dict.keys():
             self._golbal_dict[key] = value
             self._write()
-            return Message("配置\"{}\"已经更改了捏".format(key))
+            return Message(f'配置"{key}"已经更改了捏')
         else:
             return Message("当前配置项不存在捏")
 
     def on(self, name) -> Message:
-        # 打开开关
-        if name in self._url_dict.keys():
-            try:
-                r = requests.get(
-                    url=urljoin(self._url_dict[name], self._golbal_dict["on"]), timeout=int(self._golbal_dict["timeout"]))
-                return Message("已经打开了捏")
-            except:
-                return Message("打开失败了捏")
-        else:
+        if name not in self._url_dict.keys():
             return Message("当前开关不存在捏")
+        try:
+            r = requests.get(
+                url=urljoin(self._url_dict[name], self._golbal_dict["on"]), timeout=int(self._golbal_dict["timeout"]))
+            return Message("已经打开了捏")
+        except Exception:
+            return Message("打开失败了捏")
 
     def close(self, name) -> Message:
-        # 关闭开关
-        if name in self._url_dict.keys():
-            try:
-                r = requests.get(
-                    url=urljoin(self._url_dict[name], self._golbal_dict["off"]), timeout=int(self._golbal_dict["timeout"]))
-                return Message("已经关闭了捏")
-            except:
-                return Message("关闭失败了捏")
-        else:
+        if name not in self._url_dict.keys():
             return Message("当前开关不存在捏")
+        try:
+            r = requests.get(
+                url=urljoin(self._url_dict[name], self._golbal_dict["off"]), timeout=int(self._golbal_dict["timeout"]))
+            return Message("已经关闭了捏")
+        except Exception:
+            return Message("关闭失败了捏")
 
     def auto_change(self, name) -> Message:
-        # 自动在开关之间切换
-        if name in self._url_dict.keys():
-            try:
-                r = requests.get(
-                    url=urljoin(self._url_dict[name], self._golbal_dict["conf"]), timeout=int(self._golbal_dict["timeout"]))
-            except:
-                return Message("当前开关请求失败了捏")
-            mode = int(r.text)
-            if mode == 0:
-                return self.on(name)
-            else:
-                return self.close(name)
-        else:
+        if name not in self._url_dict.keys():
             return Message("当前开关不存在捏")
+        try:
+            r = requests.get(
+                url=urljoin(self._url_dict[name], self._golbal_dict["conf"]), timeout=int(self._golbal_dict["timeout"]))
+        except Exception:
+            return Message("当前开关请求失败了捏")
+        mode = int(r.text)
+        return self.on(name) if mode == 0 else self.close(name)
 
     def help(self) -> Message:
         # 帮助文档
@@ -166,7 +155,7 @@ class ESP(object):
         else:
             try:
                 return self.auto_change(cmd_list[1])
-            except:
+            except Exception:
                 return Message("命令不正确捏")
 
 
@@ -179,5 +168,5 @@ async def _esp(bot: Bot,
                event: Event,
                state: T_State = State(),
                permission=SUPERUSER):
-    cmd_list = str(event.get_message()).split(" ")
+    cmd_list = sub(" +", " ", str(event.get_message())).split(" ")
     await esp_code.finish(message=ESP_CONTROL.callback(cmd_list))
