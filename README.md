@@ -1,5 +1,7 @@
 ### 使用nonebot2和qq客户端来为esp32远程开关实现内网穿透
 
+<a href="https://www.oscs1024.com/project/oscs/ppxxxg22/ESP32_WITH_NONEBOT2?ref=badge_small" alt="OSCS Status"><img src="https://www.oscs1024.com/platform/badge/ppxxxg22/ESP32_WITH_NONEBOT2.svg?size=small"/></a>
+
 ---
 
 > #### 简介：
