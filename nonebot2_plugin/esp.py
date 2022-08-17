@@ -17,9 +17,7 @@ class ESP(object):
     # 储存名称与url的字典
     # 存储了房间名和对应的地址信息
     _url_dict = {}
-    # 存储保存的json文件名
-    _file_name = "esp_url_dict"
-    _conf_name = "esp_conf_dict"
+    _conf_name = "esp_conf"
 
     def __init__(self):
         self._golbal_dict["on"] = "on"
@@ -76,17 +74,19 @@ class ESP(object):
 
     def _write(self) -> None:
         # 持久化数据
-        with open(self._file_name, "w")as f:
-            json.dump(self._url_dict, f)
+        write_dict = {
+            "_url_dict": self._url_dict,
+            "_golbal_dict": self._golbal_dict
+        }
         with open(self._conf_name, "w")as f:
-            json.dump(self._golbal_dict, f)
+            json.dump(write_dict, f)
 
     def _read(self) -> None:
         # 读取持久化的数据
-        with open(self._file_name, "r")as f:
-            self._url_dict = json.load(f)
         with open(self._conf_name, "r")as f:
-            self._golbal_dict = json.load(f)
+            read_dict = json.load(f)
+        self._golbal_dict = read_dict["_golbal_dict"]
+        self._url_dict = read_dict["_url_dict"]
 
     def conf(self, key, value) -> Message:
         # 更改全局变量
