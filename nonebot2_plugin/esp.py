@@ -24,6 +24,8 @@ class ESP(object):
         self._golbal_dict["off"] = "off"
         self._golbal_dict["conf"] = "conf"
         self._golbal_dict["timeout"] = "3"
+        with open("help.png", "rb") as f:
+            self._help_img = f.read()
         with contextlib.suppress(Exception):
             self._read()
 
@@ -130,7 +132,7 @@ class ESP(object):
 
     def help(self) -> Message:
         # 帮助文档
-        return Message(r"关于命令说明请查看https://github.com/ppxxxg22/ESP32_WITH_NONEBOT2/tree/main/nonebot2_plugin")
+        return Message(r"关于命令说明请查看https://github.com/ppxxxg22/ESP32_WITH_NONEBOT2/tree/main/nonebot2_plugin")+MessageSegment.image(self._help_img)
 
     def callback(self, cmd_list) -> Message:
         # 根据命令来进行回调
