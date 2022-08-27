@@ -20,6 +20,9 @@ class ESP(object):
     _conf_name = "esp_conf"
 
     def __init__(self):
+        '''
+        初始化类，包含全局参数信息和读取之前持久化的数据
+        '''
         self._golbal_dict["on"] = "on"
         self._golbal_dict["off"] = "off"
         self._golbal_dict["conf"] = "conf"
