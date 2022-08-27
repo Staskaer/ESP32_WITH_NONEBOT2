@@ -33,7 +33,16 @@ class ESP(object):
             self._read()
 
     def rename(self, raw_name, new_name) -> Message:
-        # 对名称进行重命名
+        '''
+        对开关别名进行重命名
+
+        Args:
+            raw_name (str): 开关的原始别名
+            new_name (str): 开关的新的别名
+
+        Returns:
+            Message: 描述开关信息修改完成的情况的消息
+        '''
         try:
             self._url_dict[new_name] = self._url_dict.pop(raw_name)
             self._write()
@@ -42,14 +51,28 @@ class ESP(object):
             return Message("更改失败，请检测输入是否正确")
 
     def ls(self) -> Message:
-        # 返回所有信息
+        '''
+        返回所有开关和对应的ip
+
+        Returns:
+            Message: 同上
+        '''
         result = "内容如下：\n"
         for i in self._url_dict:
             result += f'开关"{i}"对应的地址为{self._url_dict[i]} '
         return Message(result)
 
     def reurl(self, name, new_url) -> Message:
-        # 更新地址信息
+        '''
+        更新地址信息
+
+        Args:
+            name (str): 开关别名
+            new_url (str but http): 开关的新地址
+
+        Returns:
+            Message: 返回描述开关地址修改结果的信息
+        '''
         if name in self._url_dict.keys():
             if not new_url.startswith("http://"):
                 new_url = f"http://{new_url}"
@@ -60,6 +83,16 @@ class ESP(object):
             return Message("更新失败，请检查当前开关是否已被录入")
 
     def add_(self, name, url) -> Message:
+        '''
+        增加新开关
+
+        Args:
+            name (str): 新开关的别名
+            url (str)): 新开关的地址
+
+        Returns:
+            Message: 返回增加开关结果的信息
+        '''
         if name in self._url_dict.keys():
             return Message("添加失败，当前开关已经存在")
         if not url.startswith("http://"):
@@ -69,7 +102,15 @@ class ESP(object):
         return Message("更新完成了捏")
 
     def del_(self, name) -> Message:
-        # 删除某个开关
+        '''
+        删除某个开关
+
+        Args:
+            name (str): 删除开关的别名
+
+        Returns:
+            Message: 返回删除开关的结果信息
+        '''
         if name in self._url_dict.keys():
             self._url_dict.pop(name)
             self._write()
@@ -78,7 +119,9 @@ class ESP(object):
             return Message("当前开关不存在，请检查输入是否正确")
 
     def _write(self) -> None:
-        # 持久化数据
+        '''
+        持久化数据
+        '''
         write_dict = {
             "_url_dict": self._url_dict,
             "_golbal_dict": self._golbal_dict
@@ -87,14 +130,25 @@ class ESP(object):
             json.dump(write_dict, f)
 
     def _read(self) -> None:
-        # 读取持久化的数据
+        '''
+        读取持久化的数据
+        '''
         with open(self._conf_name, "r")as f:
             read_dict = json.load(f)
         self._golbal_dict = read_dict["_golbal_dict"]
         self._url_dict = read_dict["_url_dict"]
 
     def conf(self, key, value) -> Message:
-        # 更改全局变量
+        '''
+        更新全局变量
+
+        Args:
+            key (str): 全局变量描述键
+            value (str|int): 全局变量描述值
+
+        Returns:
+            Message: 返回修改全局变量的结果信息
+        '''
         if key in self._golbal_dict.keys():
             self._golbal_dict[key] = value
             self._write()
@@ -103,6 +157,15 @@ class ESP(object):
             return Message("当前配置项不存在捏")
 
     def on(self, name) -> Message:
+        '''
+        打开一个开关
+
+        Args:
+            name (str): 打开开关的别名
+
+        Returns:
+            Message: 返回打开开关的结果信息
+        '''
         if name not in self._url_dict.keys():
             return Message("当前开关不存在捏")
         try:
@@ -113,6 +176,15 @@ class ESP(object):
             return Message("打开失败了捏")
 
     def close(self, name) -> Message:
+        '''
+        关闭一个开关
+
+        Args:
+            name (str): 要关闭的开关的别名
+
+        Returns:
+            Message: 返回关闭一个开关的结果信息
+        '''
         if name not in self._url_dict.keys():
             return Message("当前开关不存在捏")
         try:
@@ -123,6 +195,15 @@ class ESP(object):
             return Message("关闭失败了捏")
 
     def auto_change(self, name) -> Message:
+        '''
+        自动变换一个开关，如果当前开关处于开的状态，则会自动变化为关闭，否则执行相反的动作
+
+        Args:
+            name (str): 需要变换的开关的别名
+
+        Returns:
+            Message: 返回开关变换的结果信息
+        '''
         if name not in self._url_dict.keys():
             return Message("当前开关不存在捏")
         try:
@@ -134,11 +215,24 @@ class ESP(object):
         return self.on(name) if mode == 0 else self.close(name)
 
     def help(self) -> Message:
-        # 帮助文档
+        '''
+        返回帮助文档
+
+        Returns:
+            Message: 返回的帮助文档
+        '''
         return Message(r"关于命令说明请查看https://github.com/ppxxxg22/ESP32_WITH_NONEBOT2/tree/main/nonebot2_plugin")+MessageSegment.image(self._help_img)
 
     def callback(self, cmd_list) -> Message:
-        # 根据命令来进行回调
+        '''
+        本类动作执行接口，负责执行传入的命令
+
+        Args:
+            cmd_list (list[str])): 是一个列表，每个元素为输入的信息
+
+        Returns:
+            Message: 返回执行结果
+        '''
         if len(cmd_list) == 1 or cmd_list[1] == "help":
             return self.help()
         elif cmd_list[1] == "on":
