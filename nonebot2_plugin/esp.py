@@ -162,7 +162,7 @@ class ESP(object):
 
 
 ESP_CONTROL = ESP()
-esp_code = on_command("esp32")
+esp_code = on_command("esp32", permission=SUPERUSER)
 
 
 @esp_code.handle()
